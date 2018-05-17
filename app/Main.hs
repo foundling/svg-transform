@@ -60,8 +60,7 @@ neg :: SVGPred -> SVGPred
 neg p = \e -> not (p e) 
 
 addPositions :: Pos -> Pos -> Pos
-addPositions (Pos p) (Pos p') = Pos (fst p + fst p', snd p + snd p')
-
+addPositions (Pos (x,y)) (Pos (x',y')) = Pos (x + x', y + y')
 
 -- Filtering
 --
@@ -72,9 +71,12 @@ remove :: SVGPred -> SVG -> SVG
 remove p = select (neg p)
 
 translate :: Pos -> SVGElement -> SVGElement
-translate pos' (E (Circle pos r) c) = E (Circle (addPositions pos' pos) r) c
-translate pos' (E (Rect p1 p2 p3 p4) c) = E (Rect (addPositions pos' p1) (addPositions pos' p2) (addPositions pos' p3) (addPositions pos' p4)) c
-translate pos' (E (Polyline ps) c) = E (Polyline (map (addPositions pos') ps)) c
+translate p' (E (Circle p r) c) = E (Circle (addPositions p' p) r) c
+translate p' (E (Rect p1 p2 p3 p4) c) = E (Rect (addPositions p' p1) (addPositions p' p2) (addPositions p' p3) (addPositions p' p4)) c
+translate p' (E (Polyline ps) c) = E (Polyline (map (addPositions p') ps)) c
+
+translateShape :: Pos -> Shape -> Shape
+translateShape p' (Circle p r)  = Circle (p + p') r
 
 -- Transformations
 --
