@@ -5,23 +5,26 @@ module SVG where
 type Length = Int
 type Layer = Int
 
-data Rotation = Clockwise 
-              | CounterClockwise
-
 data Pos = Pos (Int, Int) 
                 deriving (Eq, Show)
 
+type Degree = Float
+
 instance Num Pos where
-    (+)         (Pos (x,y)) (Pos (x', y'))  = Pos (x + x', y + y')
-    (*)         (Pos (x,y)) (Pos (x', y'))  = Pos (x * x', y + y')
-    (abs)       (Pos (x,y))                 = undefined -- QUESTION 
-    (negate)    (Pos (x, y))                = Pos (negate x, negate y)
-    (fromInteger) a                         = Pos (fromInteger a, fromInteger a)
+    (+)         (Pos (x,y)) (Pos (x', y')) = Pos (x + x', y + y')
+    (*)         (Pos (x,y)) (Pos (x', y')) = Pos (x * x', y + y')
+    (abs)       (Pos (x,y))                = undefined -- QUESTION 
+    (negate)    (Pos (x, y))               = Pos (negate x, negate y)
+    (fromInteger) a                        = Pos (fromInteger a, fromInteger a)
     (signum)    (Pos (x,y))  
                     | x < 0 || y < 0 = (-1)
                     | otherwise = 1
 
+data Rotation = Clockwise Degree 
+              | CounterClockwise Degree
 
+
+-- question: why 'Shape | Constructor param' over 'Shape param | Constructor param' ?
 data Shape = Circle Pos Length 
            | Rect Pos Pos  
            | Polygon [Pos]
@@ -46,18 +49,11 @@ data SVGType = Point
              | Line
              | PlaneFigure
 
--- Predicates
-
 type SVGPred = SVGElement -> Bool
 
-onSVG :: ([SVGElement] -> [SVGElement]) -> SVG -> SVG
-onSVG f (SVG es) = SVG (f es)
 
-mapSVG :: (SVGElement -> SVGElement) -> SVG -> SVG
-mapSVG f = onSVG (map f)
+-- Basic Predicates
 
-filterSVG :: (SVGElement -> Bool) -> SVG -> SVG
-filterSVG f = onSVG (filter f)
 
 hasColor :: SVGElement -> Color -> Bool
 hasColor (E _ c _) c' = c == c'   
@@ -69,21 +65,29 @@ hasType Line (E (Polyline _) _ _) = True
 hasType Point (E (Polyline _) _ _) = True 
 hasType _ _ = False
 
+
+-- Higher-Order Predicates
+
+
+onSVG :: ([SVGElement] -> [SVGElement]) -> SVG -> SVG
+onSVG f (SVG es) = SVG (f es)
+
+mapSVG :: (SVGElement -> SVGElement) -> SVG -> SVG
+mapSVG f = onSVG (map f)
+
+select :: (SVGElement -> Bool) -> SVG -> SVG
+select f = onSVG (filter f)
+
 (/\) :: SVGPred -> SVGPred -> SVGPred
 (/\) p q e = p e && q e
 
 (\/) :: SVGPred -> SVGPred -> SVGPred
 (\/) p q e = p e || q e
 
-c = E (Circle (Pos (1,2)) 4) Red 1
-d = E (Circle (Pos (1,2)) 4) Green 1
-e = E (Rect (Pos (1,2)) (Pos (3,4))) Red 1
-els = [c,d]
-
-select :: SVGPred -> SVG -> SVG
-select = filterSVG
+-- Transformations
 
 -- translate
+
 translateShape :: Pos -> Shape -> Shape
 translateShape p' (Circle p r) = Circle (p + p') r 
 translateShape p' (Rect p1 p2) = Rect (p' + p1) (p' + p2)
@@ -95,16 +99,33 @@ translate p (E s c l) = E (translateShape p s) c l
 
 -- rotate
 
+swap :: Pos -> Pos
+swap (Pos (a,b)) = Pos (b,a)
+
+flipFirst :: Pos -> Pos
+flipFirst (Pos (a,b)) = Pos (negate a,b)
+
+-- fixme: this method is wrong for SVG
+-- it also ignores d for now and does a 90 degree rotation
 rotateShape :: Rotation -> Shape -> Shape
-rotateShape Clockwise (Rect (Pos (x1,y1)) (Pos (x2,y2))) = (Rect (Pos (negate y1,x1)) (Pos (negate y2,x2)))   
-rotateShape CounterClockwise (Rect (Pos (x1,y1)) (Pos (x2,y2))) = (Rect (Pos (negate y1,x1)) (Pos (negate y2,x2)))   
+rotateShape (Clockwise d) (Rect p1 p2) = Rect ((flipFirst . swap) p1) ((flipFirst . swap) p2)
+
 
 rotate :: Rotation -> SVGElement -> SVGElement
 rotate r (E s c l) = E (rotateShape r s) c l
 
--- duplicate :: 
--- replace :: 
--- scale ::
--- reflect ::
+-- duplicate 
+-- scale
+-- reflect
+-- stretch
+-- skew
 -- append
 -- align
+
+-- experiments
+
+c = E (Circle (Pos (1,2)) 4) Red 1
+d = E (Circle (Pos (1,2)) 4) Green 1
+e = E (Rect (Pos (1,2)) (Pos (3,4))) Red 1
+els = [c,d]
+
