@@ -126,5 +126,5 @@ rotate r (E s c l) = E (rotateShape r s) c l
 c = E (Circle (Pos (1,2)) 4) Red 1
 d = E (Circle (Pos (1,2)) 4) Green 1
 e = E (Rect (Pos (1,2)) (Pos (3,4))) Red 1
-els = [c,d]
+els = [c,d,e]
 
