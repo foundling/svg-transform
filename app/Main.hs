@@ -3,36 +3,70 @@ module SVG where
 -- Types
 
 type Length = Int
+type Layer = Int
 
 data Pos = Pos (Int, Int) 
-             deriving (Eq, Show, Ord)
+                deriving (Eq, Show)
+
+type Degree = Float
 
 instance Num Pos where
-    (+) (Pos (x,y)) (Pos (x', y')) = Pos (x + x', y + y')
-    (-) (Pos (x,y)) (Pos (x', y')) = Pos (x - x', y - y')
-    (*) = error "error"
-    abs (Pos (x,y)) = Pos (abs x, abs y) 
-    signum = error "error" 
-    fromInteger = error "error" 
+    (+)         (Pos (x,y)) (Pos (x', y')) = Pos (x + x', y + y')
+    (*)         (Pos (x,y)) (Pos (x', y')) = Pos (x * x', y + y')
+    (abs)       (Pos (x,y))                = undefined -- QUESTION 
+    (negate)    (Pos (x, y))               = Pos (negate x, negate y)
+    (fromInteger) a                        = Pos (fromInteger a, fromInteger a)
+    (signum)    (Pos (x,y))  
+                    | x < 0 || y < 0 = (-1)
+                    | otherwise = 1
 
-data Color = Red | Green | Blue
-             deriving (Eq, Show)
+data Rotation = Clockwise Degree 
+              | CounterClockwise Degree
 
-data Type = Point | Line | PlaneFigure
-             deriving (Eq, Show)
 
-data Shape = Circle Pos Length
-           | Rect Pos Pos Pos Pos
-           | Polyline [Pos]
+-- question: why 'Shape | Constructor param' over 'Shape param | Constructor param' ?
+data Shape = Circle Pos Length 
+           | Rect Pos Pos  
            | Polygon [Pos]
+           | Polyline [Pos]
+                deriving (Eq, Show)
 
-data SVGElement = E Shape Color
+data Color = Red 
+           | Green 
+           | Blue 
+           | RGB (Int, Int, Int) 
+           | RGBA (Int, Int, Int, Float) 
+           | Hex [Char]
+                deriving (Eq, Show)
+
+data SVGElement = E Shape Color Layer
+                deriving (Eq, Show)
 
 data SVG = SVG [SVGElement]
+                deriving (Eq, Show)
 
--- Predicates
+data SVGType = Point 
+             | Line
+             | PlaneFigure
+
 
 type SVGPred = SVGElement -> Bool
+
+-- Basic Predicates
+
+hasColor :: SVGElement -> Color -> Bool
+hasColor (E _ c _) c' = c == c'   
+
+hasType :: SVGType -> SVGElement -> Bool
+hasType PlaneFigure (E (Circle _ _) _ _) = True 
+hasType PlaneFigure (E (Rect _ _) _ _) = True 
+hasType Line (E (Polyline _) _ _) = True 
+hasType Point (E (Polyline _) _ _) = True 
+hasType _ _ = False
+
+
+-- Higher-Order Predicates
+
 
 onSVG :: ([SVGElement] -> [SVGElement]) -> SVG -> SVG
 onSVG f (SVG es) = SVG (f es)
@@ -40,63 +74,57 @@ onSVG f (SVG es) = SVG (f es)
 mapSVG :: (SVGElement -> SVGElement) -> SVG -> SVG
 mapSVG f = onSVG (map f)
 
-hasColor :: Color -> SVGPred
-hasColor c (E _ c') = c==c'
-
-hasType :: Type -> SVGPred
-hasType Point (E (Polyline [_]) _) = True
-hasType Line  (E (Polyline _) _) = True
-hasType PlaneFigure (E (Circle _ _) _) = True
-hasType PlaneFigure (E (Rect _ _ _ _) _) = True
-hasType _ _ = False
+select :: (SVGElement -> Bool) -> SVG -> SVG
+select f = onSVG (filter f)
 
 (/\) :: SVGPred -> SVGPred -> SVGPred
-p /\ q = \e -> p e && q e
+(/\) p q e = p e && q e
 
 (\/) :: SVGPred -> SVGPred -> SVGPred
-p \/ q = \e -> p e || q e 
-
-neg :: SVGPred -> SVGPred
-neg p = \e -> not (p e) 
-
-addPositions :: Pos -> Pos -> Pos
-addPositions (Pos (x,y)) (Pos (x',y')) = Pos (x + x', y + y')
-
--- Filtering
---
-select :: SVGPred -> SVG -> SVG
-select p (SVG es) = SVG (filter p es)
-
-remove :: SVGPred -> SVG -> SVG 
-remove p = select (neg p)
-
-translate :: Pos -> SVGElement -> SVGElement
-translate p' (E (Circle p r) c) = E (Circle (addPositions p' p) r) c
-translate p' (E (Rect p1 p2 p3 p4) c) = E (Rect (addPositions p' p1) (addPositions p' p2) (addPositions p' p3) (addPositions p' p4)) c
-translate p' (E (Polyline ps) c) = E (Polyline (map (addPositions p') ps)) c
-
-translateShape :: Pos -> Shape -> Shape
-translateShape p' (Circle p r)  = Circle (p + p') r
+(\/) p q e = p e || q e
 
 -- Transformations
---
-setColorTo :: Color -> SVGElement -> SVGElement
-setColorTo c (E s _) = E s c
 
+-- Translate 
 
--- Examples
---
-mkRedLinesBlue :: SVG -> SVG
-mkRedLinesBlue = mapSVG (setColorTo Blue) . select (hasColor Red /\ hasType Line)
+translateShape :: Pos -> Shape -> Shape
+translateShape p' (Circle p r) = Circle (p + p') r 
+translateShape p' (Rect p1 p2) = Rect (p' + p1) (p' + p2)
+translateShape p' (Polyline ps) = Polyline $ map (+p') ps
+translateShape p' (Polygon ps) = Polygon $ map (+p') ps
 
-moveRedCirclesAndSquares :: Pos -> SVG -> SVG
-moveRedCirclesAndSquares p = mapSVG (translate p) . select (hasType PlaneFigure /\ hasColor Red)
+translate :: Pos -> SVGElement -> SVGElement
+translate p (E s c l) = E (translateShape p s) c l
 
-removePlaneFigures :: SVG -> SVG 
-removePlaneFigures = remove (hasType PlaneFigure)
+-- Rotate
 
-circles = SVG [
-    E (Circle (Pos (0,1)) 1) Red, 
-    E (Circle (Pos (0,1)) 4) Blue  ]
+-- this method is not correct for SVG coordinates
+-- d for now and does a 90 degree rotation
 
-circlesRemoved = removePlaneFigures circles
+swap :: Pos -> Pos
+swap (Pos (a,b)) = Pos (b,a)
+
+flipFirst :: Pos -> Pos
+flipFirst (Pos (a,b)) = Pos (negate a,b)
+
+rotateShape :: Rotation -> Shape -> Shape
+rotateShape (Clockwise d) (Rect p1 p2) = Rect ((flipFirst . swap) p1) ((flipFirst . swap ) p2)
+
+rotate :: Rotation -> SVGElement -> SVGElement
+rotate r (E s c l) = E (rotateShape r s) c l
+
+-- duplicate 
+-- scale
+-- reflect
+-- stretch
+-- skew
+-- append
+-- align
+
+-- instances for experimentation
+
+c = E (Circle (Pos (1,2)) 4) Red 1
+d = E (Circle (Pos (1,2)) 4) Green 1
+e = E (Rect (Pos (1,2)) (Pos (3,4))) Red 1
+els = [c,d]
+
