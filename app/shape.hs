@@ -49,11 +49,10 @@ data SVGType = Point
              | Line
              | PlaneFigure
 
+
 type SVGPred = SVGElement -> Bool
 
-
 -- Basic Predicates
-
 
 hasColor :: SVGElement -> Color -> Bool
 hasColor (E _ c _) c' = c == c'   
@@ -86,7 +85,7 @@ select f = onSVG (filter f)
 
 -- Transformations
 
--- translate
+-- Translate 
 
 translateShape :: Pos -> Shape -> Shape
 translateShape p' (Circle p r) = Circle (p + p') r 
@@ -97,7 +96,10 @@ translateShape p' (Polygon ps) = Polygon $ map (+p') ps
 translate :: Pos -> SVGElement -> SVGElement
 translate p (E s c l) = E (translateShape p s) c l
 
--- rotate
+-- Rotate
+
+-- this method is not correct for SVG coordinates
+-- d for now and does a 90 degree rotation
 
 swap :: Pos -> Pos
 swap (Pos (a,b)) = Pos (b,a)
@@ -105,11 +107,8 @@ swap (Pos (a,b)) = Pos (b,a)
 flipFirst :: Pos -> Pos
 flipFirst (Pos (a,b)) = Pos (negate a,b)
 
--- fixme: this method is wrong for SVG
--- it also ignores d for now and does a 90 degree rotation
 rotateShape :: Rotation -> Shape -> Shape
-rotateShape (Clockwise d) (Rect p1 p2) = Rect ((flipFirst . swap) p1) ((flipFirst . swap) p2)
-
+rotateShape (Clockwise d) (Rect p1 p2) = Rect ((flipFirst . swap) p1) ((flipFirst . swap ) p2)
 
 rotate :: Rotation -> SVGElement -> SVGElement
 rotate r (E s c l) = E (rotateShape r s) c l
@@ -122,7 +121,7 @@ rotate r (E s c l) = E (rotateShape r s) c l
 -- append
 -- align
 
--- experiments
+-- instances for experimentation
 
 c = E (Circle (Pos (1,2)) 4) Red 1
 d = E (Circle (Pos (1,2)) 4) Green 1
