@@ -11,20 +11,16 @@ data Pos = Pos (Int, Int)
 type Degree = Float
 
 instance Num Pos where
-    (+)         (Pos (x,y)) (Pos (x', y')) = Pos (x + x', y + y')
-    (*)         (Pos (x,y)) (Pos (x', y')) = Pos (x * x', y + y')
-    (abs)       (Pos (x,y))                = undefined -- QUESTION 
-    (negate)    (Pos (x, y))               = Pos (negate x, negate y)
-    (fromInteger) a                        = Pos (fromInteger a, fromInteger a)
-    (signum)    (Pos (x,y))  
-                    | x < 0 || y < 0 = (-1)
-                    | otherwise = 1
+    Pos (x,y) + Pos (x', y')               = Pos (x + x', y + y')
+    Pos (x,y) * Pos (x', y')               = Pos (x * x', y * y')
+    abs (Pos (x, y))                       = Pos (abs x, abs y) 
+    negate (Pos (x, y))                    = Pos (negate x, negate y) 
+    fromInteger a                          = Pos (fromInteger a, fromInteger a)
+    signum (Pos (x, y))                    = Pos (signum x, signum y)
 
 data Rotation = Clockwise Degree 
               | CounterClockwise Degree
 
-
--- question: why 'Shape | Constructor param' over 'Shape param | Constructor param' ?
 data Shape = Circle Pos Length 
            | Rect Pos Pos  
            | Polygon [Pos]
