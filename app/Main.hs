@@ -4,42 +4,41 @@ module SVG where
 
 type Length = Int
 type Layer = Int
-
-data Pos = Pos (Int, Int) 
-                deriving (Eq, Show)
-
 type Degree = Float
 
-instance Num Pos where
-    Pos (x,y) + Pos (x', y')               = Pos (x + x', y + y')
-    Pos (x,y) * Pos (x', y')               = Pos (x * x', y * y')
-    abs (Pos (x, y))                       = Pos (abs x, abs y) 
-    negate (Pos (x, y))                    = Pos (negate x, negate y) 
-    fromInteger a                          = Pos (fromInteger a, fromInteger a)
-    signum (Pos (x, y))                    = Pos (signum x, signum y)
+data Pos = Pos (Int,Int) 
+                deriving (Eq,Show)
 
-data Rotation = Clockwise Degree 
-              | CounterClockwise Degree
+
+instance Num Pos where
+    Pos (x,y) + Pos (x',y')               = Pos (x+x',y+y')
+    Pos (x,y) * Pos (x',y')               = Pos (x*x',y*y')
+    abs (Pos (x,y))                       = Pos (abs x,abs y) 
+    negate (Pos (x,y))                    = Pos (negate x,negate y) 
+    fromInteger a                         = Pos (fromInteger a,fromInteger a)
+    signum (Pos (x,y))                    = Pos (signum x,signum y)
+
+type Rotation = (Bool,Degree)
 
 data Shape = Circle Pos Length 
            | Rect Pos Pos  
            | Polygon [Pos]
            | Polyline [Pos]
-                deriving (Eq, Show)
+                deriving (Eq,Show)
 
 data Color = Red 
            | Green 
            | Blue 
-           | RGB (Int, Int, Int) 
-           | RGBA (Int, Int, Int, Float) 
+           | RGB (Int,Int,Int) 
+           | RGBA (Int,Int,Int,Float) 
            | Hex [Char]
-                deriving (Eq, Show)
+                deriving (Eq,Show)
 
 data SVGElement = E Shape Color Layer
-                deriving (Eq, Show)
+                deriving (Eq,Show)
 
 data SVG = SVG [SVGElement]
-                deriving (Eq, Show)
+                deriving (Eq,Show)
 
 data SVGType = Point 
              | Line
@@ -123,4 +122,3 @@ c = E (Circle (Pos (1,2)) 4) Red 1
 d = E (Circle (Pos (1,2)) 4) Green 1
 e = E (Rect (Pos (1,2)) (Pos (3,4))) Red 1
 els = [c,d,e]
-
