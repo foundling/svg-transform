@@ -2,13 +2,14 @@ module SVG where
 
 -- Types
 
-type Length = Int
+type Length = Float
 type Layer = Int
 type Degree = Float
+type Rotation = (Bool,Degree)
+type ScaleFactor = Float
 
-data Pos = Pos (Int,Int) 
+data Pos = Pos (Float,Float) 
                 deriving (Eq,Show)
-
 
 instance Num Pos where
     Pos (x,y) + Pos (x',y')               = Pos (x+x',y+y')
@@ -17,8 +18,6 @@ instance Num Pos where
     negate (Pos (x,y))                    = Pos (negate x,negate y) 
     fromInteger a                         = Pos (fromInteger a,fromInteger a)
     signum (Pos (x,y))                    = Pos (signum x,signum y)
-
-type Rotation = (Bool,Degree)
 
 data Shape = Circle Pos Length 
            | Rect Pos Pos  
@@ -44,7 +43,6 @@ data SVGType = Point
              | Line
              | PlaneFigure
 
-
 type SVGPred = SVGElement -> Bool
 
 -- Basic Predicates
@@ -61,7 +59,6 @@ hasType _ _ = False
 
 
 -- Higher-Order Predicates
-
 
 onSVG :: ([SVGElement] -> [SVGElement]) -> SVG -> SVG
 onSVG f (SVG es) = SVG (f es)
@@ -93,9 +90,6 @@ translate p (E s c l) = E (translateShape p s) c l
 
 -- Rotate
 
--- this method is not correct for SVG coordinates
--- d for now and does a 90 degree rotation
-
 swap :: Pos -> Pos
 swap (Pos (a,b)) = Pos (b,a)
 
@@ -103,13 +97,24 @@ flipFirst :: Pos -> Pos
 flipFirst (Pos (a,b)) = Pos (negate a,b)
 
 rotateShape :: Rotation -> Shape -> Shape
-rotateShape (Clockwise d) (Rect p1 p2) = Rect ((flipFirst . swap) p1) ((flipFirst . swap ) p2)
+rotateShape r (Rect p1 p2) = Rect ((flipFirst . swap) p1) ((flipFirst . swap ) p2)
 
 rotate :: Rotation -> SVGElement -> SVGElement
 rotate r (E s c l) = E (rotateShape r s) c l
 
+-- Scale
+multiplyPoint :: Float -> Pos -> Pos
+multiplyPoint n (Pos (p1,p2)) = Pos (n*p1,n*p2)
+
+scale :: ScaleFactor -> Shape -> Shape
+scale s (Rect (Pos (x,y)) (Pos (x',y'))) = Rect (Pos (x*s,y*s)) (Pos (x'*s,y'*s))
+scale s (Circle (Pos (x,y)) r) = Circle (Pos ((x * s),(y*s)))  (r * s)
+scale s (Polyline ps) = Polyline $ map (multiplyPoint s) ps
+scale s (Polygon ps) = Polygon $ map (multiplyPoint s) ps
+
+
+
 -- duplicate 
--- scale
 -- reflect
 -- stretch
 -- skew
