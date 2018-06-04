@@ -1,5 +1,7 @@
 module SVG where
 
+import Test.QuickCheck
+
 -- Types
 
 type Length = Float
@@ -57,7 +59,6 @@ hasType Line (E (Polyline _) _ _) = True
 hasType Point (E (Polyline _) _ _) = True 
 hasType _ _ = False
 
-
 -- Higher-Order Predicates
 
 onSVG :: ([SVGElement] -> [SVGElement]) -> SVG -> SVG
@@ -113,7 +114,6 @@ scale s (Polyline ps) = Polyline $ map (multiplyPoint s) ps
 scale s (Polygon ps) = Polygon $ map (multiplyPoint s) ps
 
 
-
 -- duplicate 
 -- reflect
 -- stretch
@@ -127,3 +127,10 @@ c = E (Circle (Pos (1,2)) 4) Red 1
 d = E (Circle (Pos (1,2)) 4) Green 1
 e = E (Rect (Pos (1,2)) (Pos (3,4))) Red 1
 els = [c,d,e]
+
+-- Tests
+
+prop_rev :: [Int] -> Bool
+prop_rev xs = reverse (reverse xs) == xs
+--prop_scale :: Shape -> Bool
+--prop_scale (Circle (Pos (x,y)) l) = SVG.scale n (Circle (Pos (x,y)) l) == (Circle (Pos (n*x,n*y)) (n*l)) 
