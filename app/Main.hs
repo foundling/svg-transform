@@ -1,6 +1,6 @@
 module SVG where
 
-import Test.QuickCheck
+import Test.QuickCheck hiding (scale)
 
 -- Types
 
@@ -130,7 +130,12 @@ els = [c,d,e]
 
 -- Tests
 
+-- instance Arbitrary Shape where
+--    arbitrary =   
+-- (not sure what to do here)    
+
 prop_rev :: [Int] -> Bool
 prop_rev xs = reverse (reverse xs) == xs
---prop_scale :: Shape -> Bool
---prop_scale (Circle (Pos (x,y)) l) = SVG.scale n (Circle (Pos (x,y)) l) == (Circle (Pos (n*x,n*y)) (n*l)) 
+
+prop_scale :: ScaleFactor -> Shape -> Bool
+prop_scale n (Circle p r) = scale (1/n) (scale n (Circle p r)) == scale n (Circle p r) 
