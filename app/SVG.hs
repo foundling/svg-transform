@@ -112,12 +112,13 @@ scale s (Circle (Pos (x,y)) r) = Circle (Pos ((x * s),(y*s)))  (r * s)
 scale s (Polyline ps) = Polyline $ map (multiplyPoint s) ps
 scale s (Polygon ps) = Polygon $ map (multiplyPoint s) ps
 
-
--- duplicate 
 -- reflect
+
+reflect :: Shape -> Line -> Shape
+reflect s axis = undefined
+
 -- stretch
 -- skew
 -- append
 -- align
-
-
+-- duplicate 
