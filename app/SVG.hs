@@ -113,12 +113,10 @@ scale s (Circle (Pos (x,y)) r) = Circle (Pos ((x * s),(y*s)))  (r * s)
 scale s (Polyline ps) = Polyline $ map (multiplyPoint s) ps
 scale s (Polygon ps) = Polygon $ map (multiplyPoint s) ps
 
--- reflect
+
+-- REFLECT --
 
 
--- 1. generate equation of line from two points
--- 2. take reverse reciprocal of that equation's slope.
--- 3. for each point, mirror point across line
 slopeFromPoints :: Pos -> Pos -> Float
 slopeFromPoints (Pos (x,y)) (Pos (x',y')) = (y'-y)/(x'-x)
 
@@ -154,13 +152,29 @@ reflectOnYAxis (Circle (Pos (a,b)) r) x = (Circle (Pos (a',b)) r)
     where 
         a' = a - 2*(a - x)
 
+
+-- 3. for each point, mirror point across line
 reflectOnDiagonal :: Shape -> Pos -> Pos -> Shape
-reflectOnDiagonal (Circle (Pos(x,y)) r) p1 p2 = (Circle (Pos(rX,rY)) r) 
+reflectOnDiagonal (Circle (Pos(x,y)) r) p1 p2 = (Circle reflectedPoint r) 
     where
-        rX = 12
-        rY = 12
+        reflectedPoint = dVector + intersectionPoint
+        dVector = intersectionPoint - (Pos (x, y))
+        intersectionPoint = Pos (iX, iY)
+            where 
+                -- https://en.wikipedia.org/wiki/Line-line_intersection
+                iY = a * iX + c 
+                iX = (d - c)/(a - b)
+                d = snd perpendicularLineEq
+                c = snd lineEq
+                a = fst lineEq
+                b = fst perpendicularLineEq
+
+        perpendicularLineEq = (m,b)
+            where
+                b = y - m * x 
+                m = (negate . recip) $ fst lineEq 
+
         lineEq = pointsToLineEq p1 p2
-        perpendicularLineEq = negate . recip 
 
 reflect :: Shape -> Pos -> Pos -> Shape
 reflect s (Pos (x,y)) (Pos (x',y'))
