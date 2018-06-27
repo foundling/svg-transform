@@ -8,11 +8,12 @@ type Degree = Float
 type Rotation = (Bool,Degree)
 type ScaleFactor = Float
 
-data Pos = Pos (Float,Float) -- Int 
+data Pos = Pos (Float,Float)
                 deriving (Eq,Show)
 
 instance Num Pos where
     Pos (x,y) + Pos (x',y')               = Pos (x+x',y+y')
+    Pos (x,y) - Pos (x',y')               = Pos (x-x',y-y')
     Pos (x,y) * Pos (x',y')               = Pos (x*x',y*y')
     abs (Pos (x,y))                       = Pos (abs x,abs y) 
     negate (Pos (x,y))                    = Pos (negate x,negate y) 
@@ -114,9 +115,30 @@ scale s (Polygon ps) = Polygon $ map (multiplyPoint s) ps
 
 -- reflect
 
-reflect :: Shape -> Line -> Shape
-reflect s axis = undefined
 
+-- 1. generate equation of line from two points
+-- 2. take reverse reciprocal of that equation's slope.
+-- 3. for each point, mirror point across line
+slopeFromPoints :: Pos -> Pos -> Float
+slopeFromPoints (Pos (x,y)) (Pos (x',y')) = (y'-y)/(x'-x)
+
+yInterceptFromPoints :: Pos -> Pos -> Float
+yInterceptFromPoints (Pos (x,y)) (Pos (x',y')) = b 
+    where 
+        b = y - slope * x
+        slope = slopeFromPoints (Pos (x,y)) (Pos (x',y'))
+
+intersectionOfTwoLines :: (Float,Float) -> (Float,Float) -> Pos
+intersectionOfTwoLines (a,c) (b,d) = Pos (x,y) 
+    where
+        y = a*x + c 
+        x = (d-c)/(a-b)
+
+toPerpendicularSlope :: Float -> Float 
+toPerpendicularSlope = negate . recip
+
+--reflect s Pos (x,y) Pos (x',y')
+--reflect s axis = undefined
 -- stretch
 -- skew
 -- append
