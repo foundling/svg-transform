@@ -134,11 +134,40 @@ intersectionOfTwoLines (a,c) (b,d) = Pos (x,y)
         y = a*x + c 
         x = (d-c)/(a-b)
 
-toPerpendicularSlope :: Float -> Float 
-toPerpendicularSlope = negate . recip
+toPerpendicularSlope :: (Float,Float) -> (Float,Float) 
+toPerpendicularSlope (m,b) = ((negate . recip) m, b)
 
---reflect s Pos (x,y) Pos (x',y')
---reflect s axis = undefined
+pointsToLineEq :: Pos -> Pos -> (Float,Float)
+pointsToLineEq (Pos (x,y)) (Pos (x',y')) = (m,b)
+    where
+        b = y - m*x
+        m = (y' - y)/(x' - x)
+
+reflectOnXAxis :: Shape -> Float -> Shape
+reflectOnXAxis (Circle (Pos(a,b)) r) y = (Circle (Pos(a,b')) r)    
+    where
+        b' = b - 2*(b - y)
+
+-- FIXME: only works for reflecting from right side of axis to left
+reflectOnYAxis :: Shape -> Float -> Shape
+reflectOnYAxis (Circle (Pos (a,b)) r) x = (Circle (Pos (a',b)) r)    
+    where 
+        a' = a - 2*(a - x)
+
+reflectOnDiagonal :: Shape -> Pos -> Pos -> Shape
+reflectOnDiagonal (Circle (Pos(x,y)) r) p1 p2 = (Circle (Pos(rX,rY)) r) 
+    where
+        rX = 12
+        rY = 12
+        lineEq = pointsToLineEq p1 p2
+        perpendicularLineEq = negate . recip 
+
+reflect :: Shape -> Pos -> Pos -> Shape
+reflect s (Pos (x,y)) (Pos (x',y'))
+    | x == x' = reflectOnYAxis s x 
+    | y == y' = reflectOnXAxis s y
+    | otherwise = reflectOnDiagonal s (Pos (x,y)) (Pos (x',y'))
+     
 -- stretch
 -- skew
 -- append
