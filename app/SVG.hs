@@ -116,24 +116,14 @@ scale s (Polygon ps) = Polygon $ map (multiplyPoint s) ps
 
 -- REFLECT --
 
-
 slopeFromPoints :: Pos -> Pos -> Float
 slopeFromPoints (Pos (x,y)) (Pos (x',y')) = (y'-y)/(x'-x)
-
-yInterceptFromPoints :: Pos -> Pos -> Float
-yInterceptFromPoints (Pos (x,y)) (Pos (x',y')) = b 
-    where 
-        b = y - slope * x
-        slope = slopeFromPoints (Pos (x,y)) (Pos (x',y'))
 
 intersectionOfTwoLines :: (Float,Float) -> (Float,Float) -> Pos
 intersectionOfTwoLines (a,c) (b,d) = Pos (x,y) 
     where
         y = a*x + c 
         x = (d-c)/(a-b)
-
-toPerpendicularSlope :: (Float,Float) -> (Float,Float) 
-toPerpendicularSlope (m,b) = ((negate . recip) m, b)
 
 pointsToLineEq :: Pos -> Pos -> (Float,Float)
 pointsToLineEq (Pos (x,y)) (Pos (x',y')) = (m,b)
