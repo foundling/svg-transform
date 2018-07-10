@@ -113,8 +113,7 @@ scale s (Circle (Pos (x,y)) r) = Circle (Pos ((x * s),(y*s)))  (r * s)
 scale s (Polyline ps) = Polyline $ map (multiplyPoint s) ps
 scale s (Polygon ps) = Polygon $ map (multiplyPoint s) ps
 
-
--- REFLECT --
+-- Reflect --
 
 slopeFromPoints :: Pos -> Pos -> Float
 slopeFromPoints (Pos (x,y)) (Pos (x',y')) = (y'-y)/(x'-x)
@@ -132,18 +131,16 @@ pointsToLineEq (Pos (x,y)) (Pos (x',y')) = (m,b)
         m = (y' - y)/(x' - x)
 
 reflectOnXAxis :: Shape -> Float -> Shape
-reflectOnXAxis (Circle (Pos(a,b)) r) y = (Circle (Pos(a,b')) r)    
+reflectOnXAxis (Circle (Pos(x,y)) r) rY = (Circle (Pos(x,y')) r)    
     where
-        b' = b - 2*(b - y)
+        y' = y - 2*(y - rY)
 
--- FIXME: only works for reflecting from right side of axis to left
 reflectOnYAxis :: Shape -> Float -> Shape
-reflectOnYAxis (Circle (Pos (a,b)) r) x = (Circle (Pos (a',b)) r)    
+reflectOnYAxis (Circle (Pos (x,y)) r) rX = (Circle (Pos (x',y)) r)    
     where 
-        a' = a - 2*(a - x)
+        x' = x - 2*(x - rX)
 
 
--- 3. for each point, mirror point across line
 reflectOnDiagonal :: Shape -> Pos -> Pos -> Shape
 reflectOnDiagonal (Circle (Pos(x,y)) r) p1 p2 = (Circle reflectedPoint r) 
     where
