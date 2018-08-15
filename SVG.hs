@@ -131,19 +131,19 @@ pointsToLineEq (Pos (x,y)) (Pos (x',y')) = (m,b)
         b = y - m*x
         m = (y' - y)/(x' - x)
 
+-- FIXME
 reflectOnXAxis :: Shape -> Float -> Shape
 reflectOnXAxis (Circle (Pos(a,b)) r) y = (Circle (Pos(a,b')) r)    
     where
         b' = b - 2*(b - y)
 
--- FIXME: only works for reflecting from right side of axis to left
+-- FIXME
 reflectOnYAxis :: Shape -> Float -> Shape
 reflectOnYAxis (Circle (Pos (a,b)) r) x = (Circle (Pos (a',b)) r)    
     where 
         a' = a - 2*(a - x)
 
 
--- 3. for each point, mirror point across line
 reflectOnDiagonal :: Shape -> Pos -> Pos -> Shape
 reflectOnDiagonal (Circle (Pos(x,y)) r) p1 p2 = (Circle reflectedPoint r) 
     where
