@@ -113,8 +113,7 @@ scale s (Circle (Pos (x,y)) r) = Circle (Pos ((x * s),(y*s)))  (r * s)
 scale s (Polyline ps) = Polyline $ map (multiplyPoint s) ps
 scale s (Polygon ps) = Polygon $ map (multiplyPoint s) ps
 
-
--- REFLECT --
+-- Reflect --
 
 slopeFromPoints :: Pos -> Pos -> Float
 slopeFromPoints (Pos (x,y)) (Pos (x',y')) = (y'-y)/(x'-x)
@@ -133,19 +132,22 @@ pointsToLineEq (Pos (x,y)) (Pos (x',y')) = (m,b)
 
 -- FIXME
 reflectOnXAxis :: Shape -> Float -> Shape
-reflectOnXAxis (Circle (Pos(a,b)) r) y = (Circle (Pos(a,b')) r)    
+reflectOnXAxis (Circle (Pos(x,y)) r) rY = (Circle (Pos(x,y')) r)    
     where
-        b' = b - 2*(b - y)
+        y' = y - 2*(y - rY)
 
+<<<<<<< HEAD:SVG.hs
 -- FIXME
+=======
+>>>>>>> 2fd53a5c240590c3ad366b2252fb22aa25e359d3:app/SVG.hs
 reflectOnYAxis :: Shape -> Float -> Shape
-reflectOnYAxis (Circle (Pos (a,b)) r) x = (Circle (Pos (a',b)) r)    
+reflectOnYAxis (Circle (Pos (x,y)) r) rX = (Circle (Pos (x',y)) r)    
     where 
-        a' = a - 2*(a - x)
+        x' = x - 2*(x - rX)
 
 
 reflectOnDiagonal :: Shape -> Pos -> Pos -> Shape
-reflectOnDiagonal (Circle (Pos(x,y)) r) p1 p2 = (Circle reflectedPoint r) 
+reflectOnDiagonal (Circle (Pos (x,y)) r) p1 p2 = (Circle reflectedPoint r) 
     where
         reflectedPoint = dVector + intersectionPoint
         dVector = intersectionPoint - (Pos (x, y))
@@ -172,8 +174,22 @@ reflect s (Pos (x,y)) (Pos (x',y'))
     | y == y' = reflectOnXAxis s y
     | otherwise = reflectOnDiagonal s (Pos (x,y)) (Pos (x',y'))
      
+-- ALIGN
+
+alignX :: Shape -> Pos -> Shape 
+alignX (Circle (Pos (x,y)) r) xAxis = (Circle (Pos alignedPoint, y) r)
+    where 
+        alignedPoint = closestPoint - distance 
+        distance = closestPoint - x
+        closestPoint = min [leftmostPoint,rightmostPoint]
+        leftmostPoint = (r + x) - xAxis
+        rightmostPoint = (r - x) - xAxis
+    
+
+
+
+
 -- stretch
 -- skew
 -- append
--- align
 -- duplicate 
